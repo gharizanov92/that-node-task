@@ -14,7 +14,7 @@ Db.prototype.initialize = function(done){
             fs.writeFile(self.filename, JSON.stringify({
                 data: []
             }), done);
-        }
+        }done
     })
 };
 
@@ -82,9 +82,32 @@ Db.prototype.getById = function(id, done) {
  * @param item - item that will update the existing item. Id is preserved.
  * @param done
  */
-Db.prototype.updateById = function(id, item, done){
-    //See Db.prototype.getById
-    done('Method updateById in Db.js not implemented');
+Db.prototype.updateById = function(id, newItem, done){
+    //See Db.prototype.ud
+    var self = this;
+    this.readItems(function(err, data) {
+        if(err){
+            return done(err);
+        }
+        var item = findById(id, data);
+        if(!item) {
+            done('Item not found');
+        } else {
+            data.splice(data.indexOf(item), 1);
+            data.push(newItem);
+            self.writeItems(data, function(err) {
+                if(err){
+                    return done(err);
+                }
+                done(null, item);
+            });
+
+            done(null, {
+                "id":id,
+                "name":newItem.name
+            });
+        }
+    });
 };
 
 /**
@@ -93,7 +116,26 @@ Db.prototype.updateById = function(id, item, done){
  * @param done
  */
 Db.prototype.deleteById = function(id, done){
-    done('Method deleteById in Db.js not implemented');
+    var self = this;
+    this.readItems(function(err, data) {
+        if (err) {
+            return done(err);
+        }
+        var item = findById(id, data);
+        if (!item) {
+            done('Item not found');
+        } else {
+            data.splice(data.indexOf(item), 1);
+            self.writeItems(data, function (err) {
+                if (err) {
+                    return done(err);
+                }
+                done(null, item);
+            });
+
+            //done(null, item);
+        }
+    });
 };
 
 /**
@@ -101,7 +143,18 @@ Db.prototype.deleteById = function(id, done){
  * @param done - done(err, count)
  */
 Db.prototype.deleteAll = function(done){
-    done('Method deleteAll in Db.js not implemented');
+    var self = this;
+    this.readItems(function(err, data) {
+        if (err) {
+            return done(err);
+        }
+        self.writeItems([], function(err){
+            if (err) {
+                return done(err);
+            }
+            done(null, data.length);
+        });
+    });
 };
 
 /**
